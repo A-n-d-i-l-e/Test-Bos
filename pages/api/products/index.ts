@@ -6,10 +6,8 @@ import { getAuth } from '@clerk/nextjs/server';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectMongo();
 
-  // Get the user from Clerk authentication
   const { userId } = getAuth(req);
 
- 
   if (!userId) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -19,10 +17,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         // Fetch products associated with the authenticated user
         const products = await Product.find({ userId });
-        return res.status(200).json(products);
+        const formattedProducts = products.map((product) => ({
+          id: product._id, // Map MongoDB _id to id
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          stock: product.stock,
+          image: product.imageUrl, // Ensure the field matches the frontend
+        }));
+        return res.status(200).json(formattedProducts);
       } catch (error) {
         console.error('Failed to fetch products:', error);
-        return res.status(500).json({ error: 'Failed to fetch products', message: (error as Error).message });
+        return res.status(500).json({
+          error: 'Failed to fetch products',
+          message: (error as Error).message,
+        });
       }
 
     case 'POST':
@@ -40,15 +50,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           category,
           stock,
           imageUrl,
-          userId,  // Attach the authenticated user's ID
+          userId, // Attach the authenticated user's ID
         });
 
         await newProduct.save();
         console.log('Product created successfully:', newProduct);
-        return res.status(201).json(newProduct);
+        return res.status(201).json({
+          id: newProduct._id, // Map MongoDB _id to id
+          name: newProduct.name,
+          description: newProduct.description,
+          price: newProduct.price,
+          category: newProduct.category,
+          stock: newProduct.stock,
+          image: newProduct.imageUrl,
+        });
       } catch (error) {
-        console.error('Failed to create product:', error);  // Log the error
-        return res.status(500).json({ error: 'Failed to create product', message: (error as Error).message });
+        console.error('Failed to create product:', error);
+        return res.status(500).json({
+          error: 'Failed to create product',
+          message: (error as Error).message,
+        });
       }
 
     default:
