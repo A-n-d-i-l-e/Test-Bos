@@ -59,6 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'POST': {
       try {
         const { name, description, price, category, stock, imageUrl } = req.body;
+
+        // Ensure all required fields are provided
+        if (!name || !description || !price || !category || !stock || !imageUrl) {
+          return res.status(400).json({ message: 'Missing required fields.' });
+        }
+
         const newProduct = new Product({
           name,
           description,
@@ -69,6 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId,
         });
         await newProduct.save();
+
         return res.status(201).json({
           id: newProduct._id,
           name: newProduct.name,
