@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface Transaction extends Document {
+export interface Transaction extends Document {
   transactionHash: string;
   fromAddress: string;
   toAddress: string;
@@ -10,13 +10,6 @@ interface Transaction extends Document {
   blockTimestamp: Date;
   blockNumber: number;
   userId: string;
-  productId: Schema.Types.ObjectId;
-  productDetails: {
-    name: string;
-    description: string;
-    price: number;
-    quantity: number;
-  };
 }
 
 const TransactionSchema = new Schema<Transaction>({
@@ -29,13 +22,8 @@ const TransactionSchema = new Schema<Transaction>({
   blockTimestamp: { type: Date, required: true },
   blockNumber: { type: Number, required: true },
   userId: { type: String, required: true },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-  productDetails: {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true },
-  },
 });
 
-export default mongoose.model<Transaction>('Transaction', TransactionSchema);
+const TransactionModel = mongoose.models.Transaction || mongoose.model<Transaction>('Transaction', TransactionSchema);
+
+export default TransactionModel;
