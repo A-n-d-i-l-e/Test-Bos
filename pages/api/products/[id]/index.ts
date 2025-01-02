@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectMongo from '../../../lib/mongodb';
-import ProductModel from '../../../models/products';
+import connectMongo from '../../../../lib/mongodb';
+import ProductModel from '../../../../models/products';
 import { getAuth } from '@clerk/nextjs/server';
 import mongoose from 'mongoose';
 
