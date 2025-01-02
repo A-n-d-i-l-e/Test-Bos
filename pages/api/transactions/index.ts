@@ -1,18 +1,53 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import connectMongo from '@/lib/mongodb';
-import Transaction from '@/models/transaction';
-import { getAuth } from '@clerk/nextjs/server';
+import { NextApiRequest, NextApiResponse } from "next";
+import connectMongo from "@/lib/mongodb";
+import Transaction from "@/models/transaction";
+import { getAuth } from "@clerk/nextjs/server";
+
+// Utility function to set CORS headers
+const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
+  const allowedOrigins = ["http://localhost:3000", "https://your-live-site.com"];
+  const origin = req.headers.origin || "";
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    setCorsHeaders(req, res);
+    return res.status(200).end("CORS preflight successful");
+  }
+
+  // Set CORS headers for all other requests
+  setCorsHeaders(req, res);
+
   await connectMongo();
 
   // Validate Clerk session
   const { userId: clerkUserId } = getAuth(req);
   if (!clerkUserId) {
-    return res.status(401).json({ message: 'Unauthorized: Invalid or missing Clerk session' });
+    return res.status(401).json({ message: "Unauthorized: Invalid or missing Clerk session" });
   }
 
-  if (req.method === 'POST') {
+  if (req.method === "GET") {
+    try {
+      // Fetch transactions for the authenticated user
+      const transactions = await Transaction.find({ userId: clerkUserId }).sort({
+        blockTimestamp: -1,
+      });
+
+      return res.status(200).json(transactions);
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+      return res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  }
+
+  if (req.method === "POST") {
     try {
       const {
         transactionHash,
@@ -25,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         blockNumber,
       } = req.body;
 
-      // Ensure all required fields are present
+      // Validate request body
       if (
         !transactionHash ||
         !fromAddress ||
@@ -36,19 +71,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         !blockTimestamp ||
         !blockNumber
       ) {
-        return res.status(400).json({ message: 'Missing required fields' });
+        return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Check if the transaction already exists
+      // Check for existing transaction
       const existingTransaction = await Transaction.findOne({ transactionHash });
       if (existingTransaction) {
         return res.status(200).json({
-          message: 'Transaction already exists',
+          message: "Transaction already exists",
           transaction: existingTransaction,
         });
       }
 
-      // Create the transaction
+      // Create a new transaction
       const transaction = new Transaction({
         transactionHash,
         fromAddress,
@@ -58,17 +93,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status,
         blockTimestamp,
         blockNumber,
-        userId: clerkUserId, // Use Clerk's authenticated userId
+        userId: clerkUserId,
       });
 
       await transaction.save();
-
       return res.status(201).json(transaction);
     } catch (error) {
-      console.error('Failed to create transaction:', error);
-      return res.status(500).json({ error: 'Failed to create transaction' });
+      console.error("Failed to create transaction:", { error, requestBody: req.body });
+      return res.status(500).json({ error: "Failed to create transaction" });
     }
-  } else {
-    return res.status(405).json({ message: 'Method Not Allowed' });
   }
+
+  return res.status(405).json({ message: "Method Not Allowed" });
 }

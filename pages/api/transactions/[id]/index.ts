@@ -3,7 +3,28 @@ import connectMongo from '@/lib/mongodb';
 import Transaction from '@/models/transaction';
 import { getAuth } from '@clerk/nextjs/server';
 
+// Utility function to set CORS headers
+const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
+  const allowedOrigins = ["http://localhost:3000", "https://your-live-site.com"]; // Add your frontend origins here
+  const origin = req.headers.origin || "";
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    setCorsHeaders(req, res);
+    return res.status(200).end();
+  }
+
+  // Set CORS headers for all other requests
+  setCorsHeaders(req, res);
+
   await connectMongo();
 
   const { id } = req.query;
@@ -21,7 +42,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     if (req.method === 'GET') {
-      // Fetch a transaction by ID
       const transaction = await Transaction.findById(id);
 
       if (!transaction) {
