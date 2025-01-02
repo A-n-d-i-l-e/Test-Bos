@@ -39,6 +39,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
+      // Check if the transaction already exists
+      const existingTransaction = await Transaction.findOne({ transactionHash });
+      if (existingTransaction) {
+        return res.status(200).json({
+          message: 'Transaction already exists',
+          transaction: existingTransaction,
+        });
+      }
+
       // Create the transaction
       const transaction = new Transaction({
         transactionHash,
