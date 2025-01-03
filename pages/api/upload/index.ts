@@ -12,7 +12,7 @@ export const config = {
 
 // Utility function to set CORS headers
 const setCorsHeaders = (res: NextApiResponse) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // Adjust for your frontend origin
+  res.setHeader('Access-Control-Allow-Origin', 'https://bos-pay-client-portal.vercel.app/dashboard'); // Adjust for your frontend origin
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 };
