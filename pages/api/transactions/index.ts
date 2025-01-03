@@ -5,7 +5,7 @@ import { getAuth } from "@clerk/nextjs/server";
 
 // Utility function to set CORS headers
 const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
-  const allowedOrigins = "https://bos-pay-client-portal.vercel.app/dashboard";
+  const allowedOrigins = ["https://bos-pay-client-portal.vercel.app/dashboard"];
   const origin = req.headers.origin || "";
 
   if (allowedOrigins.includes(origin)) {
