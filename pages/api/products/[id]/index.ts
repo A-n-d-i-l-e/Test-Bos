@@ -10,8 +10,28 @@ const handleError = (res: NextApiResponse, error: unknown, customMessage: string
   res.status(500).json({ message: 'Internal Server Error', error: error instanceof Error ? error.message : 'Unknown error' });
 };
 
+// Utility function to set CORS headers
+const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
+  const allowedOrigins = ['https://bos-pay-client-portal.vercel.app', 'http://localhost:3000'];
+  const origin = req.headers.origin || '';
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    setCorsHeaders(req, res); // Set CORS headers
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end(); // Handle preflight request
+    }
+
     await connectMongo(); // Ensure MongoDB connection
   } catch (error) {
     return handleError(res, error, 'Failed to connect to MongoDB');
