@@ -8,6 +8,7 @@ const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
   const allowedOrigins = [
     'https://bos-pay-client-portal.vercel.app', // Correct origin
     'http://localhost:3000', // For local development
+    'https://dashboard.bospay.co', // new origin
   ];
   const origin = req.headers.origin || '';
 

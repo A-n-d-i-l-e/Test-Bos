@@ -12,7 +12,11 @@ const handleError = (res: NextApiResponse, error: unknown, customMessage: string
 
 // Utility function to set CORS headers
 const setCorsHeaders = (req: NextApiRequest, res: NextApiResponse) => {
-  const allowedOrigins = ['https://bos-pay-client-portal.vercel.app', 'http://localhost:3000'];
+  const allowedOrigins = [
+    'https://bos-pay-client-portal.vercel.app',
+     'http://localhost:3000',
+     'https://dashboard.bospay.co', // New origin
+  ];
   const origin = req.headers.origin || '';
 
   if (allowedOrigins.includes(origin)) {
